@@ -1407,6 +1407,7 @@ class ChickLauncher: ObservableObject {
 //        guard !trackingData.isEmpty else {
 //            return
 //        }
+        
         if UserDefaults.standard.string(forKey: "chick_mode") == "Nest" {
             DispatchQueue.main.async {
                 self.activeView = .nestFallback
@@ -1414,12 +1415,12 @@ class ChickLauncher: ObservableObject {
             return
         }
         
-//        if initialLaunch {
-//            if let origin = trackingData["af_status"] as? String, origin == "Organic" {
-//                self.switchToFallback()
-//                return
-//            }
-//        }
+        if initialLaunch {
+            if let origin = trackingData["af_status"] as? String, origin == "Organic" {
+                self.switchToFallback()
+                return
+            }
+        }
         
         if let tempPath = UserDefaults.standard.string(forKey: "temp_path"), !tempPath.isEmpty {
             displayPath = URL(string: tempPath)

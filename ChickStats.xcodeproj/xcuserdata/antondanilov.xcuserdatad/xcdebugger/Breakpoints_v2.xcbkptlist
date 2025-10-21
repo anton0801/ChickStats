@@ -14,8 +14,8 @@
             filePath = "ChickStats/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1419"
-            endingLineNumber = "1419"
+            startingLineNumber = "1420"
+            endingLineNumber = "1420"
             landmarkName = "processTrackingData()"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "ChickStats/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1417"
-            endingLineNumber = "1417"
+            startingLineNumber = "1418"
+            endingLineNumber = "1418"
             landmarkName = "processTrackingData()"
             landmarkType = "7">
          </BreakpointContent>
