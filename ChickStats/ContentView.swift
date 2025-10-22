@@ -839,9 +839,14 @@ struct StatsView: View {
                     StatisticRow(label: "Profitability per Egg", value: "\(farmData.currency) \(String(format: "%.2f", profit))", color: profit > 0 ? .graphGreen : .graphRed)
                         .padding(.horizontal)
                     
-                    Button("Export Report") {
-                        // Implement export (e.g., generate CSV)
-                        exportReport()
+                    Button("Privacy Policy") {
+                        UIApplication.shared.open(URL(string: "https://chiickstats.com/privacy-policy.html")!)
+                    }
+                    .buttonStyle(GradientButtonStyle())
+                    .padding(.horizontal)
+                    
+                    Button("Contact Us") {
+                        UIApplication.shared.open(URL(string: "https://chiickstats.com/support.html")!)
                     }
                     .buttonStyle(GradientButtonStyle())
                     .padding(.horizontal)
@@ -853,11 +858,6 @@ struct StatsView: View {
         .navigationViewStyle(.stack)
     }
     
-    private func exportReport() {
-        // Placeholder: Generate CSV or PDF
-        print("Exporting report...")
-        // Use UIActivityViewController for sharing
-    }
 }
 
 // Settings View
@@ -1417,7 +1417,11 @@ class ChickLauncher: ObservableObject {
         
         if initialLaunch {
             if let origin = trackingData["af_status"] as? String, origin == "Organic" {
-                self.switchToFallback()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    Task {
+                        await self.checlIfOrganic()
+                    }
+                }
                 return
             }
         }
@@ -1434,6 +1438,47 @@ class ChickLauncher: ObservableObject {
             } else {
                 performSetupQuery()
             }
+        }
+    }
+    
+    private func checlIfOrganic() async {
+        do {
+            let url = URL(string: "https://gcdsdk.appsflyer.com/install_data/v4.0/id6753870535")!
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: true)!
+            let queryItems: [URLQueryItem] = [
+                URLQueryItem(name: "devkey", value: "3ERPRZB3HpWKFpHixe8pQc"),
+                URLQueryItem(name: "device_id", value: AppsFlyerLib.shared().getAppsFlyerUID()),
+            ]
+            components.queryItems = components.queryItems.map { $0 + queryItems } ?? queryItems
+            
+            var request = URLRequest(url: components.url!)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 10
+            request.allHTTPHeaderFields = ["accept": "application/json"]
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                self.switchToFallback()
+                return
+            }
+            
+            do {
+                guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    print("Failed to decode JSON as dictionary")
+                    self.switchToFallback()
+                    return
+                }
+                
+                self.trackingData = json
+                self.performSetupQuery()
+            } catch {
+                print("Error: \(error)")
+                self.switchToFallback()
+            }
+        } catch {
+            print("Error: \(error)")
+            self.switchToFallback()
         }
     }
     
@@ -1487,15 +1532,21 @@ class ChickLauncher: ObservableObject {
                                     UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
                                 }
                                 dsadasjnd()
-                                self.displayPath = URL(string: pathStr)
-                                self.activeView = .statsDisplay
+                                DispatchQueue.main.async {
+                                    self.displayPath = URL(string: pathStr)
+                                    self.activeView = .statsDisplay
+                                }
                             }
                         } else {
-                            self.switchToFallback()
+                            DispatchQueue.main.async {
+                                self.switchToFallback()
+                            }
                         }
                     }
                 } catch {
-                    self.handleSetupError()
+                    DispatchQueue.main.async {
+                        self.handleSetupError()
+                    }
                 }
             }
         }.resume()
