@@ -1317,7 +1317,7 @@ struct ChickInterface: View {
         .onAppear {
             displayPath = UserDefaults.standard.string(forKey: "temp_url") ?? (UserDefaults.standard.string(forKey: "saved_path") ?? "")
             if let tempPath = UserDefaults.standard.string(forKey: "temp_url"), !tempPath.isEmpty {
-                UserDefaults.standard.set(nil, forKey: "temp_path")
+                UserDefaults.standard.set(nil, forKey: "temp_url")
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LoadTempPath"))) { _ in
