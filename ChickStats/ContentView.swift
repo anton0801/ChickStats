@@ -1315,15 +1315,15 @@ struct ChickInterface: View {
         }
         .preferredColorScheme(.dark)
         .onAppear {
-            displayPath = UserDefaults.standard.string(forKey: "temp_path") ?? (UserDefaults.standard.string(forKey: "saved_path") ?? "")
-            if let tempPath = UserDefaults.standard.string(forKey: "temp_path"), !tempPath.isEmpty {
+            displayPath = UserDefaults.standard.string(forKey: "temp_url") ?? (UserDefaults.standard.string(forKey: "saved_path") ?? "")
+            if let tempPath = UserDefaults.standard.string(forKey: "temp_url"), !tempPath.isEmpty {
                 UserDefaults.standard.set(nil, forKey: "temp_path")
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LoadTempPath"))) { _ in
-            if let tempPath = UserDefaults.standard.string(forKey: "temp_path"), !tempPath.isEmpty {
+            if let tempPath = UserDefaults.standard.string(forKey: "temp_url"), !tempPath.isEmpty {
                 displayPath = tempPath
-                UserDefaults.standard.set(nil, forKey: "temp_path")
+                UserDefaults.standard.set(nil, forKey: "temp_url")
             }
         }
     }
@@ -1426,7 +1426,7 @@ class ChickLauncher: ObservableObject {
             }
         }
         
-        if let tempPath = UserDefaults.standard.string(forKey: "temp_path"), !tempPath.isEmpty {
+        if let tempPath = UserDefaults.standard.string(forKey: "temp_url"), !tempPath.isEmpty {
             displayPath = URL(string: tempPath)
             self.activeView = .statsDisplay
             return
